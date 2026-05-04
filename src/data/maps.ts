@@ -13,10 +13,10 @@ export const OW_MAPS: OWMap[] = [
   // Escort
   { id: 'dorado',        name: 'Dorado',               mode: 'Escort',     bgColor: '#1a2a1a', bgGradient: ['#1B3A2A', '#0D1F17'], imageUrl: mp('dorado') },
   { id: 'junkertown',    name: 'Junkertown',            mode: 'Escort',     bgColor: '#2a1f0d', bgGradient: ['#3B2A0E', '#1A1208'], imageUrl: mp('junkertown') },
-  { id: 'havana',        name: 'Havana',                mode: 'Escort',     bgColor: '#603169', bgGradient: ['#0E2235', '#071119'], imageUrl: mp('havana') },
+  { id: 'havana',        name: 'Havana',                mode: 'Escort',     bgColor: '#603169', bgGradient: ['#603169', '#603169'], imageUrl: mp('havana') },
   { id: 'rialto',        name: 'Rialto',                mode: 'Escort',     bgColor: '#0d1a2a', bgGradient: ['#0E2235', '#071119'], imageUrl: mp('rialto') },
   { id: 'route66',       name: 'Route 66',              mode: 'Escort',     bgColor: '#2a1a0d', bgGradient: ['#3A2010', '#1A0F07'], imageUrl: mp('route66') },
-  { id: 'gibraltar',     name: 'Watchpoint: Gibraltar', mode: 'Escort',     bgColor: '#1a1a2a', bgGradient: ['#1C2040', '#0C101F'], imageUrl: mp('gibraltar') },
+  { id: 'gibraltar',     name: 'Watchpoint: Gibraltar', mode: 'Escort',     bgColor: '#1a1a2a', bgGradient: ['#1C2040', '#0C101F'], imageUrl: mp('watchpointgibraltar_anno') },
   { id: 'shambali',      name: 'Shambali Monastery',    mode: 'Escort',     bgColor: '#1a0d2a', bgGradient: ['#25133A', '#100919'], imageUrl: mp('shambali') },
   // Hybrid
   { id: 'blizzardworld', name: 'Blizzard World',        mode: 'Hybrid',     bgColor: '#0d1a2a', bgGradient: ['#0E2030', '#07101A'], imageUrl: mp('blizzardworld') },
