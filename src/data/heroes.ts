@@ -1,0 +1,70 @@
+import type { OWHero } from '../types'
+
+export const OW_HEROES: OWHero[] = [
+  // Tanks
+  { id: 'dva',          name: "D.Va",             role: 'tank',    color: '#F368E0', abbr: 'DVA' },
+  { id: 'domina',          name: "Domina",             role: 'tank',    color: '#cef368', abbr: 'DMN' },
+  { id: 'doomfist',     name: 'Doomfist',         role: 'tank',    color: '#9B59B6', abbr: 'DF'  },
+  { id: 'hazard',     name: 'Hazard',         role: 'tank',    color: '#9B59B6', abbr: 'HZD'  },
+  { id: 'junkerqueen',  name: 'Junker Queen',     role: 'tank',    color: '#1ABC9C', abbr: 'JQ'  },
+  { id: 'mauga',        name: 'Mauga',            role: 'tank',    color: '#E74C3C', abbr: 'MGA' },
+  { id: 'orisa',        name: 'Orisa',            role: 'tank',    color: '#2ECC71', abbr: 'ORI' },
+  { id: 'ramattra',     name: 'Ramattra',         role: 'tank',    color: '#8E44AD', abbr: 'RAM' },
+  { id: 'reinhardt',    name: 'Reinhardt',        role: 'tank',    color: '#95A5A6', abbr: 'REIN'},
+  { id: 'roadhog',      name: 'Roadhog',          role: 'tank',    color: '#D35400', abbr: 'HOG' },
+  { id: 'sigma',        name: 'Sigma',            role: 'tank',    color: '#7F8C8D', abbr: 'SIG' },
+  { id: 'winston',      name: 'Winston',          role: 'tank',    color: '#8E9FD4', abbr: 'WIN' },
+  { id: 'wreckingball', name: 'Wrecking Ball',    role: 'tank',    color: '#F39C12', abbr: 'WB'  },
+  { id: 'zarya',        name: 'Zarya',            role: 'tank',    color: '#FF69B4', abbr: 'ZAR' },
+  // Damage
+  { id: 'sierra',         name: 'Sierra',             role: 'damage',  color: '#f34ace', abbr: 'SIERRA'},
+  { id: 'anran',         name: 'Anran',             role: 'damage',  color: '#E74C3C', abbr: 'ANRAN'},
+  { id: 'ashe',         name: 'Ashe',             role: 'damage',  color: '#f59439', abbr: 'ASHE'},
+  { id: 'bastion',      name: 'Bastion',          role: 'damage',  color: '#5D8A3C', abbr: 'BAS' },
+  { id: 'cassidy',      name: 'Cassidy',          role: 'damage',  color: '#A0522D', abbr: 'CAS' },
+  { id: 'echo',         name: 'Echo',             role: 'damage',  color: '#00CED1', abbr: 'ECH' },
+  { id: 'emre',         name: 'Emre',             role: 'damage',  color: '#f34ace', abbr: 'EMRE'},
+  { id: 'freja',         name: 'Freja',             role: 'damage',  color: '#39e9f5', abbr: 'FREJA'},
+  { id: 'genji',        name: 'Genji',            role: 'damage',  color: '#69FF47', abbr: 'GEN' },
+  { id: 'hanzo',        name: 'Hanzo',            role: 'damage',  color: '#B8AF80', abbr: 'HAN' },
+  { id: 'junkrat',      name: 'Junkrat',          role: 'damage',  color: '#F1C40F', abbr: 'JR'  },
+  { id: 'mei',          name: 'Mei',              role: 'damage',  color: '#89CFF0', abbr: 'MEI' },
+  { id: 'pharah',       name: 'Pharah',           role: 'damage',  color: '#1F4F7E', abbr: 'PHA' },
+  { id: 'reaper',       name: 'Reaper',           role: 'damage',  color: '#7D3C98', abbr: 'REA' },
+  { id: 'sojourn',      name: 'Sojourn',          role: 'damage',  color: '#E74C3C', abbr: 'SOJ' },
+  { id: 'soldier76',    name: 'Soldier: 76',      role: 'damage',  color: '#3498DB', abbr: 'S76' },
+  { id: 'sombra',       name: 'Sombra',           role: 'damage',  color: '#9B59B6', abbr: 'SOM' },
+  { id: 'symmetra',     name: 'Symmetra',         role: 'damage',  color: '#5DADE2', abbr: 'SYM' },
+  { id: 'torbjorn',     name: 'Torbjörn',         role: 'damage',  color: '#CA6F1E', abbr: 'TOR' },
+  { id: 'tracer',       name: 'Tracer',           role: 'damage',  color: '#F39C12', abbr: 'TRA' },
+  { id: 'vendetta',      name: 'Vendetta',          role: 'damage',  color: '#C0392B', abbr: 'VEN' },
+  { id: 'venture',      name: 'Venture',          role: 'damage',  color: '#C0392B', abbr: 'VEN' },
+  { id: 'widowmaker',   name: 'Widowmaker',       role: 'damage',  color: '#7D3C98', abbr: 'WID' },
+  // Support
+  { id: 'ana',          name: 'Ana',              role: 'support', color: '#2980B9', abbr: 'ANA' },
+  { id: 'baptiste',     name: 'Baptiste',         role: 'support', color: '#1ABC9C', abbr: 'BAP' },
+  { id: 'brigitte',     name: 'Brigitte',         role: 'support', color: '#CA6F1E', abbr: 'BRI' },
+  { id: 'illari',       name: 'Illari',           role: 'support', color: '#F39C12', abbr: 'ILL' },
+  { id: 'jetpackcat',         name: 'Jetpack Cat',             role: 'support', color: '#6BB8D4', abbr: 'JPC' },
+  { id: 'juno',         name: 'Juno',             role: 'support', color: '#6BB8D4', abbr: 'JUN' },
+  { id: 'kiriko',       name: 'Kiriko',           role: 'support', color: '#F5CBA7', abbr: 'KIR' },
+  { id: 'lifeweaver',   name: 'Lifeweaver',       role: 'support', color: '#F1948A', abbr: 'LW'  },
+  { id: 'lucio',        name: 'Lúcio',            role: 'support', color: '#27AE60', abbr: 'LUC' },
+  { id: 'mercy',        name: 'Mercy',            role: 'support', color: '#F9E79F', abbr: 'MER' },
+  { id: 'mizuki',        name: 'Mizuki',            role: 'support', color: '#F9E79F', abbr: 'MIZ' },
+  { id: 'moira',        name: 'Moira',            role: 'support', color: '#8E44AD', abbr: 'MOI' },
+  { id: 'wuyang',     name: 'Wuyang',         role: 'support', color: '#5457f8', abbr: 'WUY' },
+  { id: 'zenyatta',     name: 'Zenyatta',         role: 'support', color: '#F0E68C', abbr: 'ZEN' },
+]
+
+export const ROLE_COLORS: Record<string, string> = {
+  tank:    '#4FC1E9',
+  damage:  '#FF6B6B',
+  support: '#A8E6CF',
+}
+
+export const ROLE_LABELS: Record<string, string> = {
+  tank:    'Tank',
+  damage:  'Damage',
+  support: 'Support',
+}
