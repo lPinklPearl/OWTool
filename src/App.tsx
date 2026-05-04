@@ -296,6 +296,11 @@ export default function App() {
         onRenameStep={renameTimelineStep}
         enabled={timelineEnabled}
       />
+
+      {/* Credit footer */}
+      <footer className="flex items-center justify-center py-1 bg-ow-panel border-t border-ow-border flex-shrink-0">
+        <span className="text-xs text-gray-500">สร้างโดย <span className="text-ow-orange font-semibold">1PinkAP</span></span>
+      </footer>
     </div>
   )
 }
