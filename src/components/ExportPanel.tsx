@@ -21,15 +21,26 @@ export function ExportPanel({
   const exportPNG = () => {
     const stage = stageRef.current
     if (!stage) return
-    // Temporarily reset transform for full export
+
+    // Read the true map dimensions from the background image node
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const bgImage = stage.getLayers()[0]?.findOne('Image') as any
+    const mapW: number = bgImage ? bgImage.width() : 1600
+    const mapH: number = bgImage ? bgImage.height() : 900
+
+    // Reset transform so the export starts at (0,0) at 1:1 scale
     const oldX = stage.x()
     const oldY = stage.y()
     const oldScale = stage.scaleX()
     stage.x(0); stage.y(0); stage.scale({ x: 1, y: 1 })
     stage.batchDraw()
-    const dataUrl = stage.toDataURL({ pixelRatio: 2, mimeType: 'image/png' })
+
+    // Pass explicit width/height so Konva renders the full map area
+    const dataUrl = stage.toDataURL({ pixelRatio: 2, mimeType: 'image/png', width: mapW, height: mapH })
+
     stage.x(oldX); stage.y(oldY); stage.scale({ x: oldScale, y: oldScale })
     stage.batchDraw()
+
     const link = document.createElement('a')
     link.download = `${selectedMap.id}-strategy.png`
     link.href = dataUrl
