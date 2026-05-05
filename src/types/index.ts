@@ -149,6 +149,14 @@ export interface TimelineStep {
   shapes: CanvasShape[];
 }
 
+export interface Keyframe {
+  id: string;
+  shapeId: string;
+  time: number; // seconds from animation start
+  x: number;
+  y: number;
+}
+
 export const MARKER_COLORS: Record<MarkerType, string> = {
   enemy:     '#EF4444',
   ally:      '#3B82F6',
