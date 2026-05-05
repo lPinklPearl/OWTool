@@ -13,7 +13,7 @@
 - **หลายแผนที่** — รองรับแผนที่ทุกแผนที่ใน Overwatch 2
 - **Layers** — เปิด/ปิด layer ของ Drawing, Heroes, Notes ได้อิสระ
 - **Fog of War** — ซ่อนส่วนที่ยังไม่ได้วางแผน
-- **Timeline** — สร้างหลาย Step เพื่อวาง plan แบบเป็นขั้นตอน
+- **Animation** — สร้างหลาย Step เพื่อวาง plan แบบเป็นขั้นตอน
 - **Export/Import** — บันทึก/โหลด plan เป็น JSON หรือ Export เป็นรูปภาพ
 - **Share Link** — สร้าง URL สำหรับแชร์ plan ให้ทีม
 
