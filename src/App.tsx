@@ -7,18 +7,18 @@ import { HeroPanel } from './components/HeroPanel'
 import { LayersPanel } from './components/LayersPanel'
 import { MapSelector } from './components/MapSelector'
 import { ExportPanel } from './components/ExportPanel'
-import { TimelinePanel } from './components/TimelinePanel'
+import { AnimationPanel } from './components/AnimationPanel'
 import { useHistory } from './hooks/useHistory'
+import { useAnimation } from './hooks/useAnimation'
 import { OW_MAPS } from './data/maps'
 import type {
   CanvasShape, DrawingTool, MarkerType, LayersState,
-  StageTransform, TeamSide, TimelineStep, OWMap, HeroShape,
+  StageTransform, TeamSide, OWMap, HeroShape,
 } from './types'
-import { Clock, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Film, ChevronLeft, ChevronRight } from 'lucide-react'
 
 const DEFAULT_MAP = OW_MAPS[0]
 
-// Decode share-link state from URL hash
 function loadFromHash(): { shapes: CanvasShape[]; mapId: string } | null {
   try {
     const hash = window.location.hash
@@ -66,12 +66,9 @@ export default function App() {
   // ── Transform ────────────────────────────────────────────────────
   const [transform, setTransform] = useState<StageTransform>({ x: 0, y: 0, scale: 1 })
 
-  // ── Timeline ─────────────────────────────────────────────────────
-  const [timelineEnabled, setTimelineEnabled] = useState(false)
-  const [timelineSteps, setTimelineSteps] = useState<TimelineStep[]>([
-    { id: uuid(), label: 'Step 1', shapes: [] },
-  ])
-  const [currentStep, setCurrentStep] = useState(0)
+  // ── Animation ────────────────────────────────────────────────────
+  const [animEnabled, setAnimEnabled] = useState(false)
+  const animation = useAnimation()
 
   // ── UI panels ────────────────────────────────────────────────────
   const [leftOpen, setLeftOpen]  = useState(true)
@@ -126,39 +123,40 @@ export default function App() {
     setSelectedId(null)
   }, [push])
 
-  // ── Timeline mutations ────────────────────────────────────────────
-  const addTimelineStep = useCallback(() => {
-    const newStep: TimelineStep = { id: uuid(), label: `Step ${timelineSteps.length + 1}`, shapes: [...shapes] }
-    setTimelineSteps(s => [...s, newStep])
-    setCurrentStep(timelineSteps.length)
-  }, [timelineSteps, shapes])
+  // ── Animation: drag handler (creates keyframe instead of moving base shape) ──
+  const handleAnimDrag = useCallback((id: string, x: number, y: number) => {
+    if (animation.currentTime === 0) {
+      // At time 0, update base position
+      push(shapes.map(s => s.id === id ? { ...s, x, y } as CanvasShape : s))
+    } else {
+      animation.addOrUpdateKeyframe(id, x, y, animation.currentTime)
+    }
+  }, [animation, shapes, push])
 
-  const deleteTimelineStep = useCallback((id: string) => {
-    setTimelineSteps(s => {
-      const next = s.filter(st => st.id !== id)
-      return next.length ? next : s
-    })
-    setCurrentStep(i => Math.max(0, i - 1))
-  }, [])
-
-  const renameTimelineStep = useCallback((id: string, label: string) => {
-    setTimelineSteps(s => s.map(st => st.id === id ? { ...st, label } : st))
-  }, [])
-
-  const handleStepChange = useCallback((i: number) => {
-    // Save current shapes to current step before switching
-    setTimelineSteps(prev =>
-      prev.map((s, idx) => idx === currentStep ? { ...s, shapes } : s)
+  // ── Animation: "Add Keyframe" button ─────────────────────────────
+  const handleAddKeyframe = useCallback(() => {
+    if (!selectedId) return
+    const displayShapes = animation.getDisplayShapes(shapes)
+    const shape = displayShapes.find(s => s.id === selectedId)
+    if (!shape || !('x' in shape) || !('y' in shape)) return
+    animation.addOrUpdateKeyframe(
+      selectedId,
+      (shape as { x: number; y: number }).x,
+      (shape as { x: number; y: number }).y,
+      animation.currentTime,
     )
-    setCurrentStep(i)
-    push(timelineSteps[i].shapes)
-  }, [currentStep, shapes, timelineSteps, push])
+  }, [selectedId, shapes, animation])
 
   // ── Zoom controls ────────────────────────────────────────────────
   const zoom = (factor: number) => {
     setTransform(t => ({ ...t, scale: Math.max(0.15, Math.min(8, t.scale * factor)) }))
   }
   const zoomReset = () => setTransform({ x: 0, y: 0, scale: 1 })
+
+  // Compute display shapes (interpolated when animation is on)
+  const displayShapes = animEnabled
+    ? animation.getDisplayShapes(shapes)
+    : shapes
 
   return (
     <div className="flex flex-col h-screen bg-ow-dark text-white">
@@ -179,15 +177,21 @@ export default function App() {
 
         <div className="flex-1" />
 
-        {/* Timeline toggle */}
+        {/* Animation toggle */}
         <button
           className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded text-xs font-medium transition-colors ${
-            timelineEnabled ? 'bg-ow-orange text-black' : 'text-gray-400 hover:text-white hover:bg-ow-hover border border-ow-border'
+            animEnabled
+              ? 'bg-ow-orange text-black'
+              : 'text-gray-400 hover:text-white hover:bg-ow-hover border border-ow-border'
           }`}
-          onClick={() => setTimelineEnabled(p => !p)}
+          onClick={() => {
+            setAnimEnabled(p => !p)
+            animation.pause()
+            animation.seek(0)
+          }}
         >
-          <Clock className="w-3.5 h-3.5" />
-          Timeline
+          <Film className="w-3.5 h-3.5" />
+          Animate
         </button>
       </header>
 
@@ -237,8 +241,8 @@ export default function App() {
         {/* Canvas */}
         <MapCanvas
           map={selectedMap}
-          shapes={shapes}
-          tool={tool}
+          shapes={displayShapes}
+          tool={animEnabled ? 'select' : tool}
           color={color}
           strokeWidth={strokeWidth}
           markerType={markerType}
@@ -251,6 +255,8 @@ export default function App() {
           onSelect={setSelectedId}
           onDropHero={handleDropHero}
           stageRef={stageRef}
+          onAnimDrag={animEnabled ? handleAnimDrag : undefined}
+          dragDisabled={animEnabled && animation.isPlaying}
         />
 
         {/* Collapse right button */}
@@ -286,15 +292,22 @@ export default function App() {
         </div>
       </div>
 
-      {/* Timeline bar */}
-      <TimelinePanel
-        steps={timelineSteps}
-        currentStep={currentStep}
-        onStepChange={handleStepChange}
-        onAddStep={addTimelineStep}
-        onDeleteStep={deleteTimelineStep}
-        onRenameStep={renameTimelineStep}
-        enabled={timelineEnabled}
+      {/* Animation panel */}
+      <AnimationPanel
+        enabled={animEnabled}
+        shapes={shapes}
+        keyframes={animation.keyframes}
+        currentTime={animation.currentTime}
+        duration={animation.duration}
+        isPlaying={animation.isPlaying}
+        selectedId={selectedId}
+        onSeek={animation.seek}
+        onPlay={animation.play}
+        onPause={animation.pause}
+        onReset={() => { animation.pause(); animation.seek(0) }}
+        onAddKeyframe={handleAddKeyframe}
+        onDeleteKeyframe={animation.deleteKeyframe}
+        onDurationChange={animation.setDuration}
       />
 
       {/* Credit footer */}

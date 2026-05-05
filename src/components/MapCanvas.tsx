@@ -100,13 +100,14 @@ function MapBackground({
 // ── Hero icon renderer ─────────────────────────────────────────────────────
 
 function HeroIcon({
-  shape, selected, onSelect, onDragEnd, onDelete,
+  shape, selected, onSelect, onDragEnd, onDelete, draggable: draggableProp = true,
 }: {
   shape: HeroShape
   selected: boolean
   onSelect: (id: string) => void
   onDragEnd: (id: string, x: number, y: number) => void
   onDelete: (id: string) => void
+  draggable?: boolean
 }) {
   const hero = OW_HEROES.find(h => h.id === shape.heroId)
   if (!hero) return null
@@ -126,7 +127,7 @@ function HeroIcon({
   return (
     <Group
       x={shape.x} y={shape.y}
-      draggable
+      draggable={draggableProp}
       onClick={() => onSelect(shape.id)}
       onTap={() => onSelect(shape.id)}
       onDblClick={() => onDelete(shape.id)}
@@ -198,12 +199,13 @@ function pointsDragEnd(
 }
 
 function ShapeNode({
-  shape, selected, onSelect, onDragEnd,
+  shape, selected, onSelect, onDragEnd, draggable: draggableProp = true,
 }: {
   shape: CanvasShape
   selected: boolean
   onSelect: (id: string) => void
   onDragEnd: (id: string, x: number, y: number, isDelta?: boolean) => void
+  draggable?: boolean
 }) {
   const commonProps = {
     opacity: shape.opacity,
@@ -222,7 +224,7 @@ function ShapeNode({
           fill={shape.color}
           pointerLength={12}
           pointerWidth={8}
-          draggable
+          draggable={draggableProp}
           {...commonProps}
           onDragEnd={e => pointsDragEnd(e, shape.id, onDragEnd)}
         />
@@ -237,7 +239,7 @@ function ShapeNode({
           dash={shape.dashed ? [12, 8] : undefined}
           lineCap="round"
           lineJoin="round"
-          draggable
+          draggable={draggableProp}
           {...commonProps}
           onDragEnd={e => pointsDragEnd(e, shape.id, onDragEnd)}
         />
@@ -251,7 +253,7 @@ function ShapeNode({
           stroke={shape.color}
           strokeWidth={shape.strokeWidth}
           fill={shape.fill ? shape.color + '44' : 'transparent'}
-          draggable
+          draggable={draggableProp}
           {...commonProps}
           onDragEnd={e => onDragEnd(shape.id, e.target.x(), e.target.y())}
         />
@@ -265,7 +267,7 @@ function ShapeNode({
           stroke={shape.color}
           strokeWidth={shape.strokeWidth}
           fill={shape.fill ? shape.color + '33' : 'transparent'}
-          draggable
+          draggable={draggableProp}
           {...commonProps}
           onDragEnd={e => onDragEnd(shape.id, e.target.x(), e.target.y())}
         />
@@ -280,7 +282,7 @@ function ShapeNode({
           tension={0.4}
           lineCap="round"
           lineJoin="round"
-          draggable
+          draggable={draggableProp}
           {...commonProps}
           onDragEnd={e => pointsDragEnd(e, shape.id, onDragEnd)}
         />
@@ -291,7 +293,7 @@ function ShapeNode({
         <Group
           id={shape.id}
           x={shape.x} y={shape.y}
-          draggable
+          draggable={draggableProp}
           {...commonProps}
           onDragEnd={e => onDragEnd(shape.id, e.target.x(), e.target.y())}
         >
@@ -333,7 +335,7 @@ function ShapeNode({
         <Group
           id={shape.id}
           x={shape.x} y={shape.y}
-          draggable
+          draggable={draggableProp}
           {...commonProps}
           onDragEnd={e => onDragEnd(shape.id, e.target.x(), e.target.y())}
         >
@@ -399,12 +401,17 @@ interface MapCanvasProps {
   onSelect: (id: string | null) => void
   onDropHero: (heroId: string, team: TeamSide, x: number, y: number) => void
   stageRef: React.RefObject<Konva.Stage>
+  /** When animation mode is active, drags on x/y shapes call this instead of onShapesChange */
+  onAnimDrag?: (id: string, x: number, y: number) => void
+  /** Disable all dragging (e.g. during animation playback) */
+  dragDisabled?: boolean
 }
 
 export function MapCanvas({
   map, shapes, tool, color, strokeWidth, markerType, layers,
   transform, selectedId, fogOfWar,
   onShapesChange, onTransformChange, onSelect, onDropHero, stageRef,
+  onAnimDrag, dragDisabled = false,
 }: MapCanvasProps) {
   const containerRef  = useRef<HTMLDivElement>(null)
   const transformerRef = useRef<Konva.Transformer>(null)
@@ -618,6 +625,14 @@ export function MapCanvas({
   }, [tool, shapes, onShapesChange, onSelect])
 
   const handleShapeDragEnd = useCallback((id: string, x: number, y: number, isDelta?: boolean) => {
+    const shape = shapes.find(s => s.id === id)
+    if (!shape) return
+    // Point-based shapes always update base state
+    const isPointBased = shape.type === 'arrow' || shape.type === 'line' || shape.type === 'freehand'
+    if (!isPointBased && onAnimDrag) {
+      onAnimDrag(id, x, y)
+      return
+    }
     onShapesChange(shapes.map(s => {
       if (s.id !== id) return s
       if (isDelta && (s.type === 'arrow' || s.type === 'line' || s.type === 'freehand')) {
@@ -630,11 +645,15 @@ export function MapCanvas({
       }
       return s
     }))
-  }, [shapes, onShapesChange])
+  }, [shapes, onShapesChange, onAnimDrag])
 
   const handleHeroDragEnd = useCallback((id: string, x: number, y: number) => {
+    if (onAnimDrag) {
+      onAnimDrag(id, x, y)
+      return
+    }
     onShapesChange(shapes.map(s => s.id === id ? { ...s, x, y } : s))
-  }, [shapes, onShapesChange])
+  }, [shapes, onShapesChange, onAnimDrag])
 
   const handleHeroDelete = useCallback((id: string) => {
     onShapesChange(shapes.filter(s => s.id !== id))
@@ -724,6 +743,7 @@ export function MapCanvas({
               selected={shape.id === selectedId}
               onSelect={handleShapeSelect}
               onDragEnd={handleShapeDragEnd}
+              draggable={!dragDisabled}
             />
           ))}
           <PreviewShape shape={preview} />
@@ -739,6 +759,7 @@ export function MapCanvas({
               onSelect={id => tool === 'eraser' ? handleHeroDelete(id) : onSelect(id)}
               onDragEnd={handleHeroDragEnd}
               onDelete={handleHeroDelete}
+              draggable={!dragDisabled}
             />
           ))}
         </Layer>
@@ -752,6 +773,7 @@ export function MapCanvas({
               selected={shape.id === selectedId}
               onSelect={handleShapeSelect}
               onDragEnd={handleShapeDragEnd}
+              draggable={!dragDisabled}
             />
           ))}
         </Layer>
