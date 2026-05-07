@@ -172,7 +172,12 @@ export default function App() {
     // Map real drag duration to animation time; min 0.5s, max remaining duration
     const animDuration = Math.max(0.5, Math.min(remainingAnimTime, totalRealMs / 1000))
 
-    const entries = path.map(pt => ({
+    // Downsample to at most 40 evenly-spaced keyframes to avoid cluttering the timeline
+    const MAX_KF = 40
+    const step = Math.max(1, Math.floor(path.length / MAX_KF))
+    const sampled = path.filter((_, i) => i % step === 0 || i === path.length - 1)
+
+    const entries = sampled.map(pt => ({
       shapeId: id,
       x: pt.x,
       y: pt.y,
