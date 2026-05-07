@@ -1,19 +1,21 @@
 import { useState } from 'react'
 import { Download, Save, Share2, Upload, Trash2, Check } from 'lucide-react'
 import type Konva from 'konva'
-import type { CanvasShape, OWMap, StageTransform } from '../types'
+import type { CanvasShape, Keyframe, OWMap, StageTransform } from '../types'
 
 interface ExportPanelProps {
   stageRef: React.RefObject<Konva.Stage>
   shapes: CanvasShape[]
   selectedMap: OWMap
   transform: StageTransform
-  onLoadJSON: (shapes: CanvasShape[], mapId: string) => void
+  keyframes: Keyframe[]
+  animDuration: number
+  onLoadJSON: (shapes: CanvasShape[], mapId: string, keyframes?: Keyframe[], animDuration?: number) => void
   onClearAll: () => void
 }
 
 export function ExportPanel({
-  stageRef, shapes, selectedMap, transform, onLoadJSON, onClearAll,
+  stageRef, shapes, selectedMap, transform, keyframes, animDuration, onLoadJSON, onClearAll,
 }: ExportPanelProps) {
   const [copied, setCopied] = useState(false)
   const [confirmClear, setConfirmClear] = useState(false)
@@ -52,6 +54,8 @@ export function ExportPanel({
       version: '1.0',
       mapId: selectedMap.id,
       shapes,
+      keyframes,
+      animDuration,
       exportedAt: new Date().toISOString(),
     }
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
@@ -74,7 +78,7 @@ export function ExportPanel({
         const text = await file.text()
         const data = JSON.parse(text)
         if (!data.shapes || !data.mapId) throw new Error('Invalid file')
-        onLoadJSON(data.shapes, data.mapId)
+        onLoadJSON(data.shapes, data.mapId, data.keyframes, data.animDuration)
       } catch {
         alert('Failed to load JSON — invalid strategy file.')
       }

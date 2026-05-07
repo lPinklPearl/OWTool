@@ -146,12 +146,19 @@ export default function App() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showLabels])
 
-  const handleLoadJSON = useCallback((newShapes: CanvasShape[], mapId: string) => {
+  const handleLoadJSON = useCallback((
+    newShapes: CanvasShape[],
+    mapId: string,
+    newKeyframes?: import('./types').Keyframe[],
+    newAnimDuration?: number,
+  ) => {
     const map = OW_MAPS.find(m => m.id === mapId)
     if (map) setSelectedMap(map)
     push(newShapes)
     setSelectedId(null)
-  }, [push])
+    if (newKeyframes) animation.setKeyframes(newKeyframes)
+    if (newAnimDuration != null) animation.setDuration(newAnimDuration)
+  }, [push, animation])
 
   // ── Animation: drag handler (creates keyframe instead of moving base shape) ──
   const handleAnimDrag = useCallback((id: string, x: number, y: number) => {
@@ -342,6 +349,8 @@ export default function App() {
               shapes={shapes}
               selectedMap={selectedMap}
               transform={transform}
+              keyframes={animation.keyframes}
+              animDuration={animation.duration}
               onLoadJSON={handleLoadJSON}
               onClearAll={() => { push([]); setSelectedId(null) }}
             />

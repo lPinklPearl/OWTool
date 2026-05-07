@@ -158,6 +158,7 @@ export function useAnimation() {
     isPlaying,
     seek,
     setDuration,
+    setKeyframes,
     play,
     pause,
     addOrUpdateKeyframe,
