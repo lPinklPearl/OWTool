@@ -8,6 +8,7 @@ import { LayersPanel } from './components/LayersPanel'
 import { MapSelector } from './components/MapSelector'
 import { ExportPanel } from './components/ExportPanel'
 import { AnimationPanel } from './components/AnimationPanel'
+import type { AnimDragMode } from './components/AnimationPanel'
 import { useHistory } from './hooks/useHistory'
 import { useAnimation } from './hooks/useAnimation'
 import { OW_MAPS } from './data/maps'
@@ -68,6 +69,7 @@ export default function App() {
 
   // ── Animation ────────────────────────────────────────────────────
   const [animEnabled, setAnimEnabled] = useState(false)
+  const [animDragMode, setAnimDragMode] = useState<AnimDragMode>('freehand')
   const animation = useAnimation()
 
   // ── UI panels ────────────────────────────────────────────────────
@@ -310,7 +312,7 @@ export default function App() {
           onDropHero={handleDropHero}
           stageRef={stageRef}
           onAnimDrag={animEnabled ? handleAnimDrag : undefined}
-          onAnimPathDrag={animEnabled ? handleAnimPathDrag : undefined}
+          onAnimPathDrag={animEnabled && animDragMode === 'freehand' ? handleAnimPathDrag : undefined}
           dragDisabled={animEnabled && animation.isPlaying}
         />
 
@@ -356,6 +358,7 @@ export default function App() {
         duration={animation.duration}
         isPlaying={animation.isPlaying}
         selectedId={selectedId}
+        dragMode={animDragMode}
         onSeek={animation.seek}
         onPlay={animation.play}
         onPause={animation.pause}
@@ -363,6 +366,7 @@ export default function App() {
         onAddKeyframe={handleAddKeyframe}
         onDeleteKeyframe={animation.deleteKeyframe}
         onDurationChange={animation.setDuration}
+        onDragModeChange={setAnimDragMode}
       />
 
       {/* Credit footer */}
