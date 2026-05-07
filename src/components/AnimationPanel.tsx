@@ -1,5 +1,5 @@
 import { useRef, useCallback } from 'react'
-import { Play, Pause, Plus, RotateCcw } from 'lucide-react'
+import { Play, Pause, Plus, RotateCcw, PenLine, Diamond } from 'lucide-react'
 import type { Keyframe, CanvasShape } from '../types'
 import { OW_HEROES } from '../data/heroes'
 
@@ -24,6 +24,8 @@ function isKeyframeable(shape: CanvasShape): boolean {
   return shape.type !== 'arrow' && shape.type !== 'line' && shape.type !== 'freehand'
 }
 
+export type AnimDragMode = 'keyframe' | 'freehand'
+
 interface AnimationPanelProps {
   enabled: boolean
   shapes: CanvasShape[]
@@ -32,6 +34,7 @@ interface AnimationPanelProps {
   duration: number
   isPlaying: boolean
   selectedId: string | null
+  dragMode: AnimDragMode
   onSeek: (time: number) => void
   onPlay: () => void
   onPause: () => void
@@ -39,11 +42,14 @@ interface AnimationPanelProps {
   onAddKeyframe: () => void
   onDeleteKeyframe: (id: string) => void
   onDurationChange: (d: number) => void
+  onDragModeChange: (mode: AnimDragMode) => void
 }
 
 export function AnimationPanel({
   enabled, shapes, keyframes, currentTime, duration, isPlaying, selectedId,
+  dragMode,
   onSeek, onPlay, onPause, onReset, onAddKeyframe, onDeleteKeyframe, onDurationChange,
+  onDragModeChange,
 }: AnimationPanelProps) {
   if (!enabled) return null
 
@@ -69,10 +75,33 @@ export function AnimationPanel({
       {/* Controls row */}
       <div className="flex items-center gap-2 px-3 py-1.5">
 
-        {/* Label */}
-        <span className="text-xs font-semibold uppercase tracking-wider text-ow-orange flex-shrink-0">
-          Keyframe
-        </span>
+        {/* Drag mode toggle */}
+        <div className="flex items-center rounded overflow-hidden border border-ow-border flex-shrink-0">
+          <button
+            className={`flex items-center gap-1 px-2 py-1 text-xs font-medium transition-colors ${
+              dragMode === 'keyframe'
+                ? 'bg-ow-orange text-black'
+                : 'text-gray-400 hover:text-white hover:bg-ow-hover'
+            }`}
+            onClick={() => onDragModeChange('keyframe')}
+            title="Drag shape → single keyframe at current time"
+          >
+            <Diamond className="w-3 h-3" />
+            KF
+          </button>
+          <button
+            className={`flex items-center gap-1 px-2 py-1 text-xs font-medium transition-colors ${
+              dragMode === 'freehand'
+                ? 'bg-ow-orange text-black'
+                : 'text-gray-400 hover:text-white hover:bg-ow-hover'
+            }`}
+            onClick={() => onDragModeChange('freehand')}
+            title="Drag shape → record full path as keyframes"
+          >
+            <PenLine className="w-3 h-3" />
+            Free
+          </button>
+        </div>
 
         {/* Play / Pause */}
         <button

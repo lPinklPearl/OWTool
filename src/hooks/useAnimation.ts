@@ -125,6 +125,22 @@ export function useAnimation() {
     setKeyframes(prev => prev.filter(k => k.shapeId !== shapeId))
   }, [])
 
+  // Add many keyframes in one state update (for freehand path recording).
+  // Replaces any existing keyframes for the shape in that time range so a new
+  // drag always overwrites the old path segment cleanly.
+  const addKeyframeBatch = useCallback((entries: Array<{ shapeId: string; x: number; y: number; time: number }>) => {
+    if (entries.length === 0) return
+    setKeyframes(prev => {
+      const shapeId = entries[0].shapeId
+      const minTime = entries[0].time
+      const maxTime = entries[entries.length - 1].time
+      // Remove pre-existing keyframes for this shape inside the recorded time range
+      const kept = prev.filter(k => k.shapeId !== shapeId || k.time < minTime || k.time > maxTime)
+      const newKfs = entries.map(e => ({ id: uuid(), shapeId: e.shapeId, time: e.time, x: e.x, y: e.y }))
+      return [...kept, ...newKfs]
+    })
+  }, [])
+
   const getDisplayShapes = useCallback((shapes: CanvasShape[]): CanvasShape[] => {
     return shapes.map(shape => {
       if (!isXYShape(shape)) return shape
@@ -145,6 +161,7 @@ export function useAnimation() {
     play,
     pause,
     addOrUpdateKeyframe,
+    addKeyframeBatch,
     deleteKeyframe,
     deleteShapeKeyframes,
     getDisplayShapes,

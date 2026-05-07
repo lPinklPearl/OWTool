@@ -47,6 +47,7 @@ interface ToolbarProps {
   onZoomIn: () => void
   onZoomOut: () => void
   onZoomReset: () => void
+  editingShape?: boolean
 }
 
 export function Toolbar({
@@ -54,6 +55,7 @@ export function Toolbar({
   onToolChange, onColorChange, onStrokeChange, onMarkerTypeChange,
   onUndo, onRedo, canUndo, canRedo,
   onZoomIn, onZoomOut, onZoomReset,
+  editingShape = false,
 }: ToolbarProps) {
   const [showColorPicker, setShowColorPicker] = React.useState(false)
   const [customColor, setCustomColor] = React.useState(color)
@@ -136,6 +138,11 @@ export function Toolbar({
       <div className="w-px h-6 bg-ow-border mx-1" />
 
       {/* Color presets */}
+      {editingShape && (
+        <span className="text-xs text-ow-orange font-medium px-1 py-0.5 rounded bg-orange-900/30 border border-ow-orange/30 mr-0.5">
+          Shape
+        </span>
+      )}
       <div className="flex items-center gap-1">
         {PRESET_COLORS.map(c => (
           <button
