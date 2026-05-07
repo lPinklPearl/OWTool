@@ -433,11 +433,16 @@ export function MapCanvas({
   const transformerRef = useRef<Konva.Transformer>(null)
   const drawingLayerRef = useRef<Konva.Layer>(null)
 
-  // Track freehand drag path in animation mode (ref = no re-renders)
+  // Track freehand drag path in animation mode (ref = no re-renders for recording)
   const animDragPathRef = useRef<{
     id: string
     points: Array<{ x: number; y: number; t: number }>
   } | null>(null)
+
+  // Visual trail of the current animation drag (state = triggers canvas re-render)
+  const [animPathPreview, setAnimPathPreview] = useState<number[] | null>(null)
+  // Throttle preview state updates to every 3 points to limit re-renders
+  const previewCountRef = useRef(0)
 
   const [stageSize, setStageSize] = useState({ width: 800, height: 600 })
   const [isDrawing, setIsDrawing] = useState(false)
@@ -503,15 +508,18 @@ export function MapCanvas({
   const handleAnimShapeDragStart = useCallback((id: string, x: number, y: number) => {
     if (!onAnimDrag) return
     animDragPathRef.current = { id, points: [{ x, y, t: Date.now() }] }
+    previewCountRef.current = 0
+    setAnimPathPreview([x, y])
   }, [onAnimDrag])
 
   const handleAnimShapeDragMove = useCallback((id: string, x: number, y: number) => {
     const path = animDragPathRef.current
     if (!path || path.id !== id) return
-    const now = Date.now()
-    const last = path.points[path.points.length - 1]
-    if (now - last.t >= 40) {
-      path.points.push({ x, y, t: now })
+    path.points.push({ x, y, t: Date.now() })
+    // Update visual trail every 2 new points to limit re-renders
+    previewCountRef.current += 1
+    if (previewCountRef.current % 2 === 0) {
+      setAnimPathPreview(path.points.flatMap(p => [p.x, p.y]))
     }
   }, [])
 
@@ -662,23 +670,29 @@ export function MapCanvas({
     if (tool === 'select') onSelect(id)
   }, [tool, shapes, onShapesChange, onSelect])
 
+  const commitAnimPath = useCallback((id: string, x: number, y: number) => {
+    const path = animDragPathRef.current
+    if (path && path.id === id && path.points.length > 2 && onAnimPathDrag) {
+      path.points.push({ x, y, t: Date.now() })
+      onAnimPathDrag(id, path.points)
+    } else {
+      onAnimDrag!(id, x, y)
+    }
+    animDragPathRef.current = null
+    setAnimPathPreview(null)
+  }, [onAnimDrag, onAnimPathDrag])
+
   const handleShapeDragEnd = useCallback((id: string, x: number, y: number, isDelta?: boolean) => {
     const shape = shapes.find(s => s.id === id)
     if (!shape) return
     // Point-based shapes always update base state
     const isPointBased = shape.type === 'arrow' || shape.type === 'line' || shape.type === 'freehand'
     if (!isPointBased && onAnimDrag) {
-      const path = animDragPathRef.current
-      if (path && path.id === id && path.points.length > 2 && onAnimPathDrag) {
-        path.points.push({ x, y, t: Date.now() })
-        onAnimPathDrag(id, path.points)
-      } else {
-        onAnimDrag(id, x, y)
-      }
-      animDragPathRef.current = null
+      commitAnimPath(id, x, y)
       return
     }
     animDragPathRef.current = null
+    setAnimPathPreview(null)
     onShapesChange(shapes.map(s => {
       if (s.id !== id) return s
       if (isDelta && (s.type === 'arrow' || s.type === 'line' || s.type === 'freehand')) {
@@ -695,11 +709,11 @@ export function MapCanvas({
 
   const handleHeroDragEnd = useCallback((id: string, x: number, y: number) => {
     if (onAnimDrag) {
-      onAnimDrag(id, x, y)
+      commitAnimPath(id, x, y)
       return
     }
     onShapesChange(shapes.map(s => s.id === id ? { ...s, x, y } : s))
-  }, [shapes, onShapesChange, onAnimDrag])
+  }, [shapes, onShapesChange, onAnimDrag, commitAnimPath])
 
   const handleHeroDelete = useCallback((id: string) => {
     onShapesChange(shapes.filter(s => s.id !== id))
@@ -795,6 +809,19 @@ export function MapCanvas({
             />
           ))}
           <PreviewShape shape={preview} />
+          {/* Animation drag trail */}
+          {animPathPreview && animPathPreview.length >= 4 && (
+            <Line
+              points={animPathPreview}
+              stroke="#F99E1A"
+              strokeWidth={2 / transform.scale}
+              opacity={0.6}
+              dash={[6 / transform.scale, 4 / transform.scale]}
+              lineCap="round"
+              lineJoin="round"
+              listening={false}
+            />
+          )}
         </Layer>
 
         {/* Heroes layer */}
