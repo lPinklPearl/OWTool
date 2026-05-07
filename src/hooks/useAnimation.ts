@@ -125,6 +125,23 @@ export function useAnimation() {
     setKeyframes(prev => prev.filter(k => k.shapeId !== shapeId))
   }, [])
 
+  // Add many keyframes in one state update (for freehand path recording)
+  const addKeyframeBatch = useCallback((entries: Array<{ shapeId: string; x: number; y: number; time: number }>) => {
+    const SNAP = 0.05
+    setKeyframes(prev => {
+      let result = [...prev]
+      for (const entry of entries) {
+        const existing = result.find(k => k.shapeId === entry.shapeId && Math.abs(k.time - entry.time) <= SNAP)
+        if (existing) {
+          result = result.map(k => k.id === existing.id ? { ...k, x: entry.x, y: entry.y, time: entry.time } : k)
+        } else {
+          result.push({ id: uuid(), shapeId: entry.shapeId, time: entry.time, x: entry.x, y: entry.y })
+        }
+      }
+      return result
+    })
+  }, [])
+
   const getDisplayShapes = useCallback((shapes: CanvasShape[]): CanvasShape[] => {
     return shapes.map(shape => {
       if (!isXYShape(shape)) return shape
@@ -145,6 +162,7 @@ export function useAnimation() {
     play,
     pause,
     addOrUpdateKeyframe,
+    addKeyframeBatch,
     deleteKeyframe,
     deleteShapeKeyframes,
     getDisplayShapes,
