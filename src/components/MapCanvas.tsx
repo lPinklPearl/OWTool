@@ -515,8 +515,11 @@ export function MapCanvas({
   const handleAnimShapeDragMove = useCallback((id: string, x: number, y: number) => {
     const path = animDragPathRef.current
     if (!path || path.id !== id) return
-    path.points.push({ x, y, t: Date.now() })
-    // Update visual trail every 2 new points to limit re-renders
+    const now = Date.now()
+    const last = path.points[path.points.length - 1]
+    if (now - last.t < 40) return
+    path.points.push({ x, y, t: now })
+    // Update visual trail every 2 recorded points to limit re-renders
     previewCountRef.current += 1
     if (previewCountRef.current % 2 === 0) {
       setAnimPathPreview(path.points.flatMap(p => [p.x, p.y]))

@@ -125,20 +125,19 @@ export function useAnimation() {
     setKeyframes(prev => prev.filter(k => k.shapeId !== shapeId))
   }, [])
 
-  // Add many keyframes in one state update (for freehand path recording)
+  // Add many keyframes in one state update (for freehand path recording).
+  // Replaces any existing keyframes for the shape in that time range so a new
+  // drag always overwrites the old path segment cleanly.
   const addKeyframeBatch = useCallback((entries: Array<{ shapeId: string; x: number; y: number; time: number }>) => {
-    const SNAP = 0.05
+    if (entries.length === 0) return
     setKeyframes(prev => {
-      let result = [...prev]
-      for (const entry of entries) {
-        const existing = result.find(k => k.shapeId === entry.shapeId && Math.abs(k.time - entry.time) <= SNAP)
-        if (existing) {
-          result = result.map(k => k.id === existing.id ? { ...k, x: entry.x, y: entry.y, time: entry.time } : k)
-        } else {
-          result.push({ id: uuid(), shapeId: entry.shapeId, time: entry.time, x: entry.x, y: entry.y })
-        }
-      }
-      return result
+      const shapeId = entries[0].shapeId
+      const minTime = entries[0].time
+      const maxTime = entries[entries.length - 1].time
+      // Remove pre-existing keyframes for this shape inside the recorded time range
+      const kept = prev.filter(k => k.shapeId !== shapeId || k.time < minTime || k.time > maxTime)
+      const newKfs = entries.map(e => ({ id: uuid(), shapeId: e.shapeId, time: e.time, x: e.x, y: e.y }))
+      return [...kept, ...newKfs]
     })
   }, [])
 
