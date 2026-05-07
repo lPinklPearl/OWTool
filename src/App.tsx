@@ -86,6 +86,34 @@ export default function App() {
     push(newShapes)
   }, [push])
 
+  // ── Derive toolbar display values from selected shape ─────────────
+  const selectedShape = shapes.find(s => s.id === selectedId)
+  const selectedHasColor = !!(selectedShape && 'color' in selectedShape)
+  const selectedHasStroke = !!(selectedShape && 'strokeWidth' in selectedShape)
+  const toolbarColor = selectedHasColor ? (selectedShape as any).color : color
+  const toolbarStrokeWidth = selectedHasStroke ? (selectedShape as any).strokeWidth : strokeWidth
+
+  // When color/stroke changes: update selected shape if it has those props, else save for next draw
+  const handleColorChange = useCallback((c: string) => {
+    setColor(c)
+    if (selectedId) {
+      const s = shapes.find(sh => sh.id === selectedId)
+      if (s && 'color' in s) {
+        push(shapes.map(sh => sh.id === selectedId ? { ...sh, color: c } : sh))
+      }
+    }
+  }, [selectedId, shapes, push])
+
+  const handleStrokeChange = useCallback((w: number) => {
+    setStrokeWidth(w)
+    if (selectedId) {
+      const s = shapes.find(sh => sh.id === selectedId)
+      if (s && 'strokeWidth' in s) {
+        push(shapes.map(sh => sh.id === selectedId ? { ...sh, strokeWidth: w } : sh))
+      }
+    }
+  }, [selectedId, shapes, push])
+
   const handleDropHero = useCallback((heroId: string, heroTeam: TeamSide, x: number, y: number) => {
     const hero: HeroShape = {
       id: uuid(),
@@ -132,6 +160,26 @@ export default function App() {
       animation.addOrUpdateKeyframe(id, x, y, animation.currentTime)
     }
   }, [animation, shapes, push])
+
+  // ── Animation: freehand path drag → batch keyframes ──────────────
+  const handleAnimPathDrag = useCallback((
+    id: string,
+    path: Array<{ x: number; y: number; t: number }>,
+  ) => {
+    if (path.length < 2) return
+    const totalRealMs = Math.max(path[path.length - 1].t - path[0].t, 1)
+    const remainingAnimTime = animation.duration - animation.currentTime
+    // Map real drag duration to animation time; min 0.5s, max remaining duration
+    const animDuration = Math.max(0.5, Math.min(remainingAnimTime, totalRealMs / 1000))
+
+    const entries = path.map(pt => ({
+      shapeId: id,
+      x: pt.x,
+      y: pt.y,
+      time: animation.currentTime + ((pt.t - path[0].t) / totalRealMs) * animDuration,
+    }))
+    animation.addKeyframeBatch(entries)
+  }, [animation])
 
   // ── Animation: "Add Keyframe" button ─────────────────────────────
   const handleAddKeyframe = useCallback(() => {
@@ -198,12 +246,12 @@ export default function App() {
       {/* Toolbar */}
       <Toolbar
         tool={tool}
-        color={color}
-        strokeWidth={strokeWidth}
+        color={toolbarColor}
+        strokeWidth={toolbarStrokeWidth}
         markerType={markerType}
         onToolChange={setTool}
-        onColorChange={setColor}
-        onStrokeChange={setStrokeWidth}
+        onColorChange={handleColorChange}
+        onStrokeChange={handleStrokeChange}
         onMarkerTypeChange={setMarkerType}
         onUndo={undo}
         onRedo={redo}
@@ -212,6 +260,7 @@ export default function App() {
         onZoomIn={() => zoom(1.2)}
         onZoomOut={() => zoom(1/1.2)}
         onZoomReset={zoomReset}
+        editingShape={selectedHasColor || selectedHasStroke}
       />
 
       {/* Main content */}
@@ -256,6 +305,7 @@ export default function App() {
           onDropHero={handleDropHero}
           stageRef={stageRef}
           onAnimDrag={animEnabled ? handleAnimDrag : undefined}
+          onAnimPathDrag={animEnabled ? handleAnimPathDrag : undefined}
           dragDisabled={animEnabled && animation.isPlaying}
         />
 
